@@ -40,10 +40,15 @@ routes and observed response shapes.
 ## Notes
 
 - The API is page-based. `--offset` must be a multiple of `--limit`.
+- `--limit` is capped at 10. The public API changes its result set when
+  `limit` grows: on 2026-10-18 one Commentary query returned an empty page 2 at
+  `limit=50` while paging normally at `limit=10`. The Lexsitus frontend fixes
+  `limit=10`.
 - The API's `pagination.total`/`totalPages` fields are unreliable: on
   2026-10-18 a `genocide`/`Commentary` query reported `total=30` while pages
-  1-4 returned 40 rows. The adapter keeps the raw value as `api_total` but ends
-  pagination on an empty or short page.
+  1-4 returned 40 unique rows, and a `CaseLaw` query reported 22 while returning
+  10 rows. The adapter keeps the raw value as `api_total` but ends pagination on
+  an empty or short page.
 - `Commentary` (CLICC) has a verified human reading route; other trees return
   API node URLs and metadata.
 - Search matching is term-based, not phrase-based. A hit count is not a legal

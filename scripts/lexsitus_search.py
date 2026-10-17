@@ -144,8 +144,12 @@ def search_rows(payload: dict, query: str, include_body: bool = True) -> list[di
 
 
 def search(http: HTTP, args) -> dict:
-    if args.limit < 1 or args.limit > 50:
-        raise ValueError("--limit must be 1..50")
+    if args.limit < 1 or args.limit > 10:
+        raise ValueError(
+            "--limit must be 1..10. The public API's page/limit behaviour changes the result set "
+            "above 10 (for example, a Commentary query that pages normally at limit=10 returned "
+            "an empty page 2 at limit=50). The Lexsitus frontend fixes limit=10."
+        )
     if args.offset < 0:
         raise ValueError("--offset must be >= 0")
     if args.offset % args.limit:
@@ -236,7 +240,7 @@ def fetch(http: HTTP, args) -> dict:
     return out
 
 
-def trees(http: HTTP | None, query: str | None, max_pages: int = 4) -> dict:
+def trees(http: HTTP | None, query: str | None, max_pages: int = 6) -> dict:
     rows = [{"tree_kind": name, "description": desc} for name, desc in TREES.items()]
     if query and http:
         for row in rows:
@@ -244,21 +248,23 @@ def trees(http: HTTP | None, query: str | None, max_pages: int = 4) -> dict:
             while page <= max_pages:
                 payload = http.get_json(
                     SEARCH_URL,
-                    {"query": query, "page": page, "limit": 50, "treeKind": row["tree_kind"]},
+                    {"query": query, "page": page, "limit": 10, "treeKind": row["tree_kind"]},
                 )
                 results = payload.get("results") or []
                 counted += len(results)
-                if len(results) < 50:
+                if len(results) < 10:
                     break
                 page += 1
             row["counted"] = counted
             row["count_is_lower_bound"] = page > max_pages
+            row["count_is_reliable"] = False
     return {
         "trees": rows,
         "query": query,
         "note": (
-            "Counts page through the API until a short page; they are query-specific and "
-            "lower bounds when --max-pages was reached. They are not tree sizes."
+            "Counts page through at limit=10 until a short page. They are query-specific, "
+            "not tree sizes, and remain lower bounds: the API can truncate or vary its own "
+            "result set, so do not report them as exact hits."
         ),
         "evidence": http.evidence if http else [],
         "retrieved_at": NOW(),
@@ -310,7 +316,7 @@ def main() -> int:
 
     trees_parser = sub.add_parser("trees")
     trees_parser.add_argument("--query", help="also report per-tree hit counts for this query")
-    trees_parser.add_argument("--max-pages", type=int, default=4, help="count-probe page cap per tree")
+    trees_parser.add_argument("--max-pages", type=int, default=6, help="count-probe page cap per tree")
     sub.add_parser("doctor")
 
     for item in (search_parser, fetch_parser, trees_parser, sub.choices["doctor"]):

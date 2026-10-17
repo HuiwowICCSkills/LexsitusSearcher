@@ -18,7 +18,7 @@ The domain is `cilrap-lexsitus.org`. `lexsitus.org` is not the API host.
 |---|---|
 | `query` | required; an empty value returns HTTP 400 `{"error":"Search query is required"}` |
 | `page` | 1-based page number |
-| `limit` | page size; the adapter allows 1..50 |
+| `limit` | page size; the adapter allows 1..10 because larger values change the result set |
 | `treeKind` | optional tree filter |
 
 Because the API pages rather than offsets, `page = offset // limit + 1` and
@@ -42,10 +42,26 @@ Response:
 | 3 | 3, 3, 3, 3 | 9 | 3 |
 | 10 | 10, 10, 10, 10 | 30, 30, 30, 13 | 3, 3, 3, 2 |
 
-Pages 1-4 at `limit=10` returned 40 distinct rows, and page 5 was empty,
-although the API never reported more than 30. The adapter therefore advances
-`next_offset` only while a full page is returned and ignores the reported total
-for end-of-results decisions. `trees --query` counts rows by paging, not from
+Pages 1-4 at `limit=10` returned 40 distinct rows (verified by unique IDs), and
+page 5 was empty, although the API never reported more than 30. A `CaseLaw`
+query reported `total=22` but returned 10 rows and then an empty page.
+
+**The `limit` value changes the result set itself, not just the page size:**
+
+| Query | `limit=10` | `limit=50` |
+|---|---|---|
+| `genocide` / `Commentary` | pages 1-4 return 10 each; page 5 empty | page 1 returns 50; page 2 returns 0 |
+| `command responsibility` / `Commentary` | pages 1-3 return 10 each | pages 1-3 return 50 each; reported total 150 |
+
+The Next.js frontend sends `query`, `treeKind`, `docType`, `page` and a fixed
+`limit=10` (`_next/static/chunks/644-ba95f996f221f68e.js`). Adding
+`docType=richTextDocument` made no difference to the sampled Commentary
+queries. Because the frontend's only exercised combination is `limit=10`, the
+adapter rejects larger values.
+
+The adapter therefore advances `next_offset` only while a full page is
+returned and ignores the reported total for end-of-results decisions.
+`trees --query` counts rows by paging at `limit=10`, not from
 `pagination.total`.
 
 ## Observed tree kinds

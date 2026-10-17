@@ -57,6 +57,10 @@ class SearchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             s.search(FakeHTTP({"results": []}), args(tree="Nope"))
 
+    def test_limit_above_ten_rejected(self):
+        with self.assertRaises(ValueError):
+            s.search(FakeHTTP({"results": []}), args(limit=11))
+
     def test_commentary_row_has_human_url_and_body(self):
         http = FakeHTTP({"results": [hit()], "pagination": {"total": 1, "page": 1, "limit": 5, "totalPages": 1}})
         out = s.search(http, args())
@@ -148,24 +152,25 @@ class TreeTests(unittest.TestCase):
 
             def get_json(self, url, params=None):
                 self.calls.append(params)
-                count = 50 if params["page"] == 1 else 0
+                count = 10 if params["page"] == 1 else 0
                 return {"results": [hit() for _ in range(count)]}
 
         http = PagingHTTP()
         out = s.trees(http, "genocide")
         self.assertEqual(len(http.calls), len(s.TREES) * 2)
-        self.assertTrue(all(row["counted"] == 50 for row in out["trees"]))
+        self.assertTrue(all(row["counted"] == 10 for row in out["trees"]))
         self.assertFalse(any(row["count_is_lower_bound"] for row in out["trees"]))
+        self.assertTrue(all(row["count_is_reliable"] is False for row in out["trees"]))
 
     def test_query_probe_marks_lower_bound_at_cap(self):
         class FullHTTP:
             evidence = []
 
             def get_json(self, url, params=None):
-                return {"results": [hit() for _ in range(50)]}
+                return {"results": [hit() for _ in range(10)]}
 
         out = s.trees(FullHTTP(), "genocide", max_pages=1)
-        self.assertTrue(all(row["counted"] == 50 for row in out["trees"]))
+        self.assertTrue(all(row["counted"] == 10 for row in out["trees"]))
         self.assertTrue(all(row["count_is_lower_bound"] for row in out["trees"]))
 
 
