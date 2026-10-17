@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lexsitus 检索"
+  short_description: "检索 Lexsitus（CLICC 评注、判例记录、要件、准备工作文件、TOAEP、讲座）；按 treeKind 分树，可取节点正文"
+  default_prompt: "使用 $lexsitus-searcher 检索 Lexsitus，报告所用 treeKind、真实命中总数，并说明取得的是评注正文还是元数据记录。"
