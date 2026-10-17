@@ -59,6 +59,21 @@ The Next.js frontend sends `query`, `treeKind`, `docType`, `page` and a fixed
 queries. Because the frontend's only exercised combination is `limit=10`, the
 adapter rejects larger values.
 
+### The official UI uses the same faulty count
+
+The search modal renders a pagination component with
+`totalItems = pagination.total` and `itemsPerPage = 10`, so it displays
+`ceil(total / 10)` page buttons. Browser checks on 2026-10-18:
+
+- `genocide` + `CLICC-statute`: the UI shows pages **1, 2, 3** only and disables
+  "Last page" on page 3, while API page 4 still returns 10 unique rows. The last
+  page of results is unreachable from the UI.
+- `genocide` + `Case Law`: the UI shows pages **1, 2, 3**, but page 2 renders
+  "No results found for genocide".
+
+So this is not only an API-consumer problem: the site's own search interface
+inherits the bad count and both truncates and over-promises pages.
+
 The adapter therefore advances `next_offset` only while a full page is
 returned and ignores the reported total for end-of-results decisions.
 `trees --query` counts rows by paging at `limit=10`, not from

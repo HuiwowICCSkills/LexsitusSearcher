@@ -46,6 +46,7 @@ description: 独立检索 Lexsitus（CILRAP 平台），用于查找罗马规约
 - 匹配是**词项级**，不是短语级；命中处返回 `<mark>` 高亮。条文编号不入索引，查第 28 条请用路径或正文关键词。
 - **API 的 `pagination.total` / `totalPages` 不可信**（2026-10-18 实测：报 `total=30`，逐页实际取得 40 条；另一查询报 22 却只返回 10 条）。报告保留 `api_total` 供核对，但分页结束以空页或短页为准；不要把 `api_total` 当精确命中数。
 - **`limit` 会改变结果集本身**：同一查询在 `limit=50` 时可能第 2 页直接为空，在 `limit=10` 时却能正常翻到第 4 页。官方前端固定 `limit=10`，本 skill 因此只接受 1..10，超出即报错。
+- **官方 UI 也用这个错误计数算页数**：2026-10-18 浏览器实测，`genocide` + CLICC 只显示 1–3 页（API 第 4 页仍有 10 条）；Case Law 显示 1–3 页，但第 2 页即 "No results found"。因此官方界面本身会少显示或多给空页。
 - `trees --query` 在 `limit=10` 下逐页计数，到 `--max-pages` 上限时标为下界；即使未到上限也标 `count_is_reliable=false`，因为 API 可能自行截断。
 - 只有 `Commentary`（CLICC）的人读页面 `/en/clicc/<path>` 经过验证；其他树返回 API 节点链接和元数据。正文能否取得，以返回的 `text_characters` 为准。
 - 多词查询可能只命中其中一个词，必须按 `title`、`snippet` 和 `tree_kind` 判断相关性，不能把命中数当法律相关性判断。
