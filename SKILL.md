@@ -50,6 +50,7 @@ description: 独立检索 Lexsitus（CILRAP 平台），用于查找罗马规约
 - `trees --query` 在 `limit=10` 下逐页计数，到 `--max-pages` 上限时标为下界；即使未到上限也标 `count_is_reliable=false`，因为 API 可能自行截断。
 - 只有 `Commentary`（CLICC）的人读页面 `/en/clicc/<path>` 经过验证；其他树返回 API 节点链接和元数据。正文能否取得，以返回的 `text_characters` 为准。
 - 多词查询可能只命中其中一个词，必须按 `title`、`snippet` 和 `tree_kind` 判断相关性，不能把命中数当法律相关性判断。
+- `CaseLaw` 节点是映射或索引记录，不是法官如何处理某争点的证明。要判断裁判支持、否定还是未处理，必须沿记录中的 Legal Tools PURL 或案件编号进入一手裁判全文，核对段落和程序结果；CLICC 的提及同样不能替代裁判原文。
 - 报告里的 `evidence` 记录实际请求 URL、HTTP 状态、内容类型、字节响应哈希和检索时间。引用评注时以 `fetch` 取回的正文为准，不用搜索摘要代替正文。
 - Lexsitus 内容是**研究参考/学术评注**，不是拘束力来源；与规约、判例正文分开标注。
 
