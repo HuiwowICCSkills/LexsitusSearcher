@@ -53,3 +53,22 @@ routes and observed response shapes.
   API node URLs and metadata.
 - Search matching is term-based, not phrase-based. A hit count is not a legal
   relevance judgment.
+
+## 实测效果（2026-11-09）
+
+以下命令与结果来自本机 `~/.codex/skills/LexsitusSearcher` 的实网运行；检索日期 2026-11-09（Asia/Shanghai），输出为该次运行实际返回的 JSON 报告。
+
+```powershell
+& .\run.ps1 search 'command responsibility' --tree Commentary --limit 5
+```
+
+- 状态：`ok`；`api_total = 15`，但 `api_pagination_reliable = false`，不能当作精确命中数；本次返回 5 条（`next_offset = 5`）。
+- 代表性结果：
+
+| 题名 | 类型 / 日期 | 链接 |
+| --- | --- | --- |
+| Article 28(1): Criminal Responsibility | DOCUMENT（Commentary）；—（API 未返回日期字段） | https://cilrap-lexsitus.org/en/clicc/28-a-criminally-responsible |
+| Article 28(1): Military Commander | DOCUMENT（Commentary）；—（API 未返回日期字段） | https://cilrap-lexsitus.org/en/clicc/28-a-military-commander |
+| Article 28(1): Effective Command and Control or Effective Authority and Control | DOCUMENT（Commentary）；—（API 未返回日期字段） | https://cilrap-lexsitus.org/en/clicc/28-a-effective-command-and-control-or-effective-authority-and-control |
+
+> 说明：`api_total = 15` 不可当作精确命中数：`api_pagination_reliable = false`，报告自带的 `pagination_warning` 记录过 API 的 total/totalPages 与实际返回行数不一致（曾观察到 total=30 而第 1–4 页共 40 行）。正确做法是按 `next_offset` 继续翻页，遇到空页或短页即停。5 条结果全部是 `--tree Commentary`（CLICC 树）下的 Article 28 节点，`access = commentary-text` 表示评注正文可直接读取；它们是 CILRAP Lexsitus 平台的评注（次级材料），不是《罗马规约》条文本身，也不是判决全文。题名中的 `<mark>` 高亮标签已去除，其余文字与 JSON 逐字一致。
